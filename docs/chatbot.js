@@ -13,7 +13,7 @@ let conversationHistory = [];
 let cachedToken = null;
 
 function getApiBase() {
-  return window.location.hostname === "localhost" ? "https://localhost:8000" : "https://127.0.0.1:8000";
+  return window.location.hostname === "localhost" ? "https://krypton-hr.onrender.com" : "https://127.0.0.1:8000";
 }
 
 async function getToken() {

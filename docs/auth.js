@@ -4,7 +4,7 @@
    ========================================================================== */
 const Auth = (() => {
   // IMPORTANT: change this to your live backend URL when you deploy.
-  const API_BASE = "https://localhost:8000";
+  const API_BASE = "https://krypton-hr.onrender.com";
 
   const SESSION_KEY = "hr_session";            // sessionStorage: cleared when the tab closes
   const STAFF_ROLES = ["Admin", "HR"];

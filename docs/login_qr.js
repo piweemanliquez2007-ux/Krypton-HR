@@ -89,7 +89,7 @@
     setStatus("success", "QR scanned successfully. Logging in...");
     await stopScanner();
     try {
-      const res = await fetch((typeof Auth !== "undefined" && Auth.API_BASE ? Auth.API_BASE : "https://localhost:8000") + "/auth/qr-login", {
+      const res = await fetch((typeof Auth !== "undefined" && Auth.API_BASE ? Auth.API_BASE : "https://krypton-hr.onrender.com") + "/auth/qr-login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ qr_payload: decodedText }),
