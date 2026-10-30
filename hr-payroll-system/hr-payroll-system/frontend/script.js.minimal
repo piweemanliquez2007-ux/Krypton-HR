@@ -1,0 +1,12 @@
+﻿function startRealtimeClock() {
+  const clockEl = document.getElementById('realtimeClock');
+  if (!clockEl) return;
+  function updateClock() {
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const dateStr = now.toLocaleDateString('en-PH', { weekday: 'short', month: 'short', day: 'numeric' });
+    clockEl.textContent = dateStr + ' • ' + timeStr;
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+}

@@ -1,0 +1,14 @@
+{
+  "recommendations": [
+    "eamodio.gitlens",
+    "esbenp.prettier-vscode",
+    "mikestead.dotenv",
+    "mtxr.sqltools",
+    "mtxr.sqltools-driver-pg",
+    "ms-python.python",
+    "rangav.vscode-thunder-client",
+    "dsznajder.es7-react-js-snippets",
+    "dbaeumer.vscode-eslint",
+    "bradlc.vscode-tailwindcss"
+  ]
+}
