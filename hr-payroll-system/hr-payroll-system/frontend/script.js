@@ -1,4 +1,4 @@
-﻿const DEFAULT_EMPLOYEES = [
+const DEFAULT_EMPLOYEES = [
   { id: "EMP-001", name: "Maria Clara Santos", dept: "Engineering", pos: "Senior Software Engineer", salary: 75000, status: "Active", tin: "234-567-890-000", sss: "34-5678901-2", phic: "12-345678901-2", hdmf: "1234-5678-9012" },
   { id: "EMP-002", name: "Juan Dela Cruz", dept: "Human Resources", pos: "HR & Payroll Specialist", salary: 38000, status: "Active", tin: "112-334-556-000", sss: "03-9876543-2", phic: "98-765432109-1", hdmf: "9876-5432-1098" },
   { id: "EMP-003", name: "Ana Maria Reyes", dept: "Finance", pos: "Senior Tax Accountant", salary: 48000, status: "Active", tin: "445-667-889-000", sss: "04-1122334-5", phic: "55-667788990-1", hdmf: "5566-7788-9900" },
@@ -23,7 +23,7 @@ let deptChartInstance = null;
 
 // STATUTORY COMPUTATION ENGINES (PHILIPPINES)
 function computeSSS(salary) {
-  // SSS 2025/2026: 4.5% Employee share, MSC capped at ₱35,000
+  // SSS 2025/2026: 4.5% Employee share, MSC capped at ?35,000
   const msc = Math.min(Math.max(salary, 5000), 35000);
   const eeShare = msc * 0.045;
   const erShare = msc * 0.105;
@@ -31,7 +31,7 @@ function computeSSS(salary) {
 }
 
 function computePhilHealth(salary) {
-  // PhilHealth 2025/2026: 5.0% split equally (2.5% EE share). Floor ₱10,000; Cap ₱100,000
+  // PhilHealth 2025/2026: 5.0% split equally (2.5% EE share). Floor ?10,000; Cap ?100,000
   const base = Math.min(Math.max(salary, 10000), 100000);
   const eeShare = base * 0.025;
   const erShare = base * 0.025;
@@ -39,7 +39,7 @@ function computePhilHealth(salary) {
 }
 
 function computePagIBIG(salary) {
-  // Pag-IBIG: 2% capped at ₱200 EE share
+  // Pag-IBIG: 2% capped at ?200 EE share
   const eeShare = Math.min(salary * 0.02, 200);
   const erShare = Math.min(salary * 0.02, 200);
   return { eeShare, erShare };
@@ -163,7 +163,7 @@ function getInitials(name) {
 }
 
 function formatMoney(amount) {
-  return "₱" + Number(amount).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return "?" + Number(amount).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function saveData() {
@@ -270,6 +270,8 @@ function renderRecentTable() {
       <td>${e.dept}</td>
       <td>${e.pos}</td>
       <td>${formatMoney(e.salary)}</td>
+      <th>Salary Basis</th>
+      <td>${e.salary_basis || '-'}</td>
       <td><span class="status-badge ${e.status.toLowerCase().replace(' ', '')}">${e.status}</span></td>
     </tr>
   `).join("");
@@ -301,6 +303,8 @@ function renderEmployeesTable() {
       <td>${e.dept}</td>
       <td>${e.pos}</td>
       <td>${formatMoney(e.salary)}</td>
+      <th>Salary Basis</th>
+      <td>${e.salary_basis || '-'}</td>
       <td><span class="status-badge ${e.status.toLowerCase().replace(' ', '')}">${e.status}</span></td>
       <td>
         <button class="link" onclick="editEmployee('${e.id}')">Edit</button> | 
@@ -319,7 +323,7 @@ function renderDepartments() {
     <div class="info-card clickable" onclick="openPersonnelModal('Department', '${d}')">
       <span>DEPARTMENT</span>
       <strong>${d}</strong>
-      <small>${depts[d]} Member(s) — View Personnel →</small>
+      <small>${depts[d]} Member(s) � View Personnel ?</small>
     </div>
   `).join("");
 }
@@ -337,7 +341,7 @@ function renderPositions() {
       <td><strong>${p}</strong></td>
       <td>${posMap[p].dept}</td>
       <td>${posMap[p].count} Member(s)</td>
-      <td><button class="link" onclick="openPersonnelModal('Position', '${p}')">View Employees →</button></td>
+      <td><button class="link" onclick="openPersonnelModal('Position', '${p}')">View Employees ?</button></td>
     </tr>
   `).join("");
 }
@@ -368,6 +372,8 @@ window.openPersonnelModal = function(type, name) {
         <td>${e.dept}</td>
         <td>${e.pos}</td>
         <td>${formatMoney(e.salary)}</td>
+      <th>Salary Basis</th>
+      <td>${e.salary_basis || '-'}</td>
         <td><span class="status-badge ${e.status.toLowerCase().replace(' ', '')}">${e.status}</span></td>
       </tr>
     `).join("");
@@ -474,7 +480,7 @@ function renderThirteenthMonth() {
         <td>${monthsWorked} Months</td>
         <td>${formatMoney(annualBasic)}</td>
         <td><strong>${formatMoney(thirteenthPay)}</strong></td>
-        <td><span class="status-badge ${isExempt ? 'active' : 'leave'}">${isExempt ? 'Tax Exempt (≤ ₱90k)' : 'Taxable Excess'}</span></td>
+        <td><span class="status-badge ${isExempt ? 'active' : 'leave'}">${isExempt ? 'Tax Exempt (= ?90k)' : 'Taxable Excess'}</span></td>
       </tr>
     `;
   }).join("");
@@ -605,7 +611,7 @@ function generatePayslip() {
       <div class="payslip-header">
         <div>
           <h2 style="color:var(--sidebar-bg);">ENTERPRISE HR PHILIPPINES INC.</h2>
-          <small>OFFICIAL STATUTORY PAYSLIP — ${month}</small>
+          <small>OFFICIAL STATUTORY PAYSLIP � ${month}</small>
         </div>
         <div style="text-align:right;">
           <strong>ID: ${emp.id}</strong>
@@ -733,9 +739,9 @@ async function loadApplicantsFromDatabase() {
 
       let statusBadge = `<span class="badge" style="background:#e2e8f0; color:#334155;">Applied</span>`;
       if (isHired) {
-        statusBadge = `<span class="badge active" style="background:#dcfce7; color:#166534;">✓ Hired</span>`;
+        statusBadge = `<span class="badge active" style="background:#dcfce7; color:#166534;">? Hired</span>`;
       } else if (isRejected) {
-        statusBadge = `<span class="badge" style="background:#fee2e2; color:#991b1b;">✕ Rejected</span>`;
+        statusBadge = `<span class="badge" style="background:#fee2e2; color:#991b1b;">? Rejected</span>`;
       } else if (a.application_status === 'offer') {
         statusBadge = `<span class="badge" style="background:#fef3c7; color:#92400e;">Offer</span>`;
       }
@@ -744,8 +750,8 @@ async function loadApplicantsFromDatabase() {
       if (!isHired && !isRejected) {
         actionHtml = `
           <div style="display:flex; gap:6px;">
-            <button class="primary" style="padding:4px 10px; font-size:11px; background:#16a34a;" onclick="openHireModal(${a.applicant_id}, '${escapeHtml(a.first_name + ' ' + a.last_name)}', ${a.job_id || 1})">✓ Hire</button>
-            <button class="secondary" style="padding:4px 10px; font-size:11px; color:#ef4444; border-color:#fca5a5;" onclick="handleRejectCandidate(${a.applicant_id}, ${a.job_id || 1})">✕ Reject</button>
+            <button class="primary" style="padding:4px 10px; font-size:11px; background:#16a34a;" onclick="openHireModal(${a.applicant_id}, '${escapeHtml(a.first_name + ' ' + a.last_name)}', ${a.job_id || 1})">? Hire</button>
+            <button class="secondary" style="padding:4px 10px; font-size:11px; color:#ef4444; border-color:#fca5a5;" onclick="handleRejectCandidate(${a.applicant_id}, ${a.job_id || 1})">? Reject</button>
           </div>
         `;
       } else if (isHired) {
@@ -862,7 +868,7 @@ function setupRecruitmentAI() {
           </span>
         `).join("") || "<em>None detected</em>";
 
-        statusText.textContent = "✅ Candidate details and skills successfully saved into PostgreSQL!";
+        statusText.textContent = "? Candidate details and skills successfully saved into PostgreSQL!";
         statusText.style.color = "#16a34a";
         fileInput.value = "";
 
@@ -870,7 +876,7 @@ function setupRecruitmentAI() {
         loadApplicantsFromDatabase();
       } catch (err) {
         console.error(err);
-        statusText.textContent = `❌ Error: ${err.message}`;
+        statusText.textContent = `? Error: ${err.message}`;
         statusText.style.color = "#dc2626";
       } finally {
         parseBtn.disabled = false;
@@ -893,7 +899,7 @@ function setupRecruitmentAI() {
       const min = Number(opt.getAttribute("data-min") || 30000);
       const max = Number(opt.getAttribute("data-max") || 80000);
       salaryInput.value = Math.round((min + max) / 2);
-      salaryHint.textContent = `Salary must be between ₱${min.toLocaleString()} and ₱${max.toLocaleString()}`;
+      salaryHint.textContent = `Salary must be between ?${min.toLocaleString()} and ?${max.toLocaleString()}`;
     });
   }
 
@@ -938,7 +944,7 @@ function setupRecruitmentAI() {
         if (!res.ok) throw new Error(data.detail || "Failed to hire applicant");
 
         modal.style.display = "none";
-        alert(`🎉 Success! ${candidateName} has been officially hired as Employee #${data.new_employee_id} via PostgreSQL stored procedure sp_hire_applicant()!`);
+        alert(`?? Success! ${candidateName} has been officially hired as Employee #${data.new_employee_id} via PostgreSQL stored procedure sp_hire_applicant()!`);
 
         // Add to local employee list so they immediately show on Employees and Dashboard pages!
         const deptName = jobId === 2 ? "Human Resources" : "Engineering";
@@ -962,7 +968,7 @@ function setupRecruitmentAI() {
         renderAll();
         loadApplicantsFromDatabase();
       } catch (err) {
-        alert(`❌ Hire Error: ${err.message}`);
+        alert(`? Hire Error: ${err.message}`);
       } finally {
         confirmHireBtn.disabled = false;
         confirmHireBtn.textContent = "Confirm Hire";
