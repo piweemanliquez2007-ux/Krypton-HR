@@ -54,11 +54,12 @@ const QRAttendance = (() => {
   }
 
   async function loadKiosks() {
+    const ka = el("kioskAdmin");
     if (!Auth.isStaff()) {
-      el("kioskAdmin").hidden = true;
+      if (ka) ka.hidden = true;
       return;
     }
-    el("kioskAdmin").hidden = false;
+    if (ka) ka.hidden = false;
     try {
       const list = await Auth.apiFetch("/api/attendance/kiosks");
       const tbody = el("kioskTable");

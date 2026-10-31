@@ -118,8 +118,8 @@ function switchPage(pageId) {
   if (targetPage) targetPage.classList.add("active");
 
   const titleText = targetBtn ? targetBtn.textContent.trim().replace(/^[^a-zA-Z]+/, '') : pageId;
-  pageTitle.textContent = titleText;
-  breadcrumb.textContent = `ENTERPRISE HR / ${titleText.toUpperCase()}`;
+  if (pageTitle) pageTitle.textContent = titleText;
+  if (breadcrumb) breadcrumb.textContent = `ENTERPRISE HR / ${titleText.toUpperCase()}`;
 
   renderAll();
 }
