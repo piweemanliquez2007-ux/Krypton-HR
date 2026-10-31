@@ -323,7 +323,7 @@ function renderDepartments() {
     <div class="info-card clickable" onclick="openPersonnelModal('Department', '${d}')">
       <span>DEPARTMENT</span>
       <strong>${d}</strong>
-      <small>${depts[d]} Member(s) — View Personnel ?</small>
+      <small>${depts[d]} Member(s) ï¿½ View Personnel ?</small>
     </div>
   `).join("");
 }
@@ -611,7 +611,7 @@ function generatePayslip() {
       <div class="payslip-header">
         <div>
           <h2 style="color:var(--sidebar-bg);">ENTERPRISE HR PHILIPPINES INC.</h2>
-          <small>OFFICIAL STATUTORY PAYSLIP — ${month}</small>
+          <small>OFFICIAL STATUTORY PAYSLIP ï¿½ ${month}</small>
         </div>
         <div style="text-align:right;">
           <strong>ID: ${emp.id}</strong>
