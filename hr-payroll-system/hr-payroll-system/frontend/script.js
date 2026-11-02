@@ -274,7 +274,10 @@ function setupNavigation() {
 
 function switchPage(pageId) {
   navBtns.forEach(b => b.classList.remove("active"));
-  pages.forEach(p => p.classList.remove("active"));
+  pages.forEach(p => {
+    p.classList.remove("active");
+    p.style.display = "none";
+  });
 
   if (pageId === "recruitment") {
     loadApplicantsFromDatabase();
@@ -284,7 +287,12 @@ function switchPage(pageId) {
   const targetPage = document.getElementById(pageId);
 
   if (targetBtn) targetBtn.classList.add("active");
-  if (targetPage) targetPage.classList.add("active");
+  if (targetPage) {
+    targetPage.style.display = "flex";
+    // Trigger reflow to restart animation
+    void targetPage.offsetHeight;
+    targetPage.classList.add("active");
+  }
 
   const titleText = targetBtn ? targetBtn.textContent.trim().replace(/^[^a-zA-Z]+/, '') : pageId;
   if (pageTitle) pageTitle.textContent = titleText;

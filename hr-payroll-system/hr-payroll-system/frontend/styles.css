@@ -718,6 +718,18 @@ nav {
 
 .page.active {
   display: flex;
+  animation: pageSlideFade 0.35s ease;
+}
+
+@keyframes pageSlideFade {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .page-header {
