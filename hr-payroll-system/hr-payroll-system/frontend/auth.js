@@ -219,23 +219,21 @@ const Auth = (() => {
         if (loaderText) loaderText.textContent = "Authenticating credentials...";
       }
 
-      await new Promise((r) => setTimeout(r, 1200));
-      if (loader) {
-        loader.classList.add("success");
-        if (loaderText) loaderText.textContent = "Access granted. Securing session...";
-      }
-      await new Promise((r) => setTimeout(r, 900));
-      if (loginScreen) {
-        loginScreen.classList.add("fade-out");
-      }
-      await new Promise((r) => setTimeout(r, 600));
-
       try {
+        await new Promise((r) => setTimeout(r, 800));
         await login(document.getElementById("loginUsername").value.trim(),
                     document.getElementById("loginPassword").value);
         await loadProfileName();
+        if (loader) {
+          loader.classList.add("success");
+          if (loaderText) loaderText.textContent = "Access granted. Securing session...";
+        }
+        await new Promise((r) => setTimeout(r, 600));
+        if (loginScreen) {
+          loginScreen.classList.add("fade-out");
+        }
+        await new Promise((r) => setTimeout(r, 600));
         applySession();
-        if (loginScreen) loginScreen.classList.remove("fade-out");
         if (loader) {
           loader.classList.remove("active", "success");
           loader.hidden = true;
