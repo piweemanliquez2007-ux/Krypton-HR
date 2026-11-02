@@ -915,7 +915,7 @@ async function generatePayslip() {
 // ==========================================
 // RECRUITMENT & AI RESUME PARSER INTEGRATION
 // ==========================================
-let activeApiBase = window.location.hostname === "localhost" ? "https://localhost:8000" : "https://127.0.0.1:8000";
+let activeApiBase = window.location.hostname === "localhost" ? "https://krypton-hr.onrender.com" : "https://krypton-hr.onrender.com";
 let cachedAuthToken = null;
 
 function escapeHtml(str) {
