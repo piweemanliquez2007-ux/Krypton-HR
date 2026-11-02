@@ -679,9 +679,34 @@ nav {
   background: rgba(255, 255, 255, 0.12);
   border: 1px solid rgba(255, 255, 255, 0.25);
   color: #f1f5f9;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 .topbar .refresh-btn:hover {
   background: rgba(255, 255, 255, 0.22);
+}
+
+.topbar .refresh-btn.is-loading {
+  opacity: 0.7;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+.topbar .refresh-btn.is-loading::before {
+  content: "";
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: refreshSpin 0.8s linear infinite;
+}
+
+@keyframes refreshSpin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* PAGES */

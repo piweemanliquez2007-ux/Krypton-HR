@@ -315,7 +315,19 @@ function setupEventListeners() {
     btn.addEventListener("click", () => switchPage(btn.getAttribute("data-target")));
   });
 
-  document.getElementById("refreshBtn").addEventListener("click", () => renderAll());
+  document.getElementById("refreshBtn").addEventListener("click", () => {
+    const btn = document.getElementById("refreshBtn");
+    btn.classList.add("is-loading");
+    btn.disabled = true;
+    const originalText = btn.textContent;
+    btn.textContent = "Refreshing...";
+    renderAll();
+    setTimeout(() => {
+      btn.classList.remove("is-loading");
+      btn.disabled = false;
+      btn.textContent = originalText;
+    }, 600);
+  });
   document.getElementById("calcPayrollBtn").addEventListener("click", () => {
     showToast("Philippine payroll recalculated with updated SSS, PhilHealth, Pag-IBIG, and TRAIN Law Tax tables.", "success");
     renderPayroll();
