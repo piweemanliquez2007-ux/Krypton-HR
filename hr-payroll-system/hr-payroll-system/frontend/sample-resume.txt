@@ -1,0 +1,71 @@
+JUAN REYES DELOS SANTOS
+Software Engineer | Full-Stack Developer
+Manila, Philippines
+juan.reyes.delosantos@email.com | +63 917 123 4567
+linkedin.com/in/juanreyes-dev | github.com/juanreyes-dev
+
+PROFESSIONAL SUMMARY
+Detail-oriented Full-Stack Software Engineer with 5 years of experience building scalable web applications and RESTful APIs. Proficient in JavaScript, TypeScript, React, Node.js, Python, Django, PostgreSQL, and AWS. Passionate about clean code, test-driven development, and delivering high-quality software solutions that meet business needs.
+
+TECHNICAL SKILLS
+Languages: JavaScript (ES6+), TypeScript, Python, SQL, HTML5, CSS3
+Frontend: React, Vue.js, Next.js, Tailwind CSS, Redux, Axios
+Backend: Node.js, Express, Python, Django, Flask, FastAPI, REST APIs, GraphQL
+Databases: PostgreSQL, MySQL, MongoDB, Redis
+DevOps & Tools: Git, GitHub, Docker, Jenkins, AWS (EC2, S3, Lambda), CI/CD, Linux, Nginx
+Testing: Jest, Mocha, Chai, PyTest, Selenium, Cypress
+Other: Agile/Scrum, Jira, Figma, RESTful API Design, OAuth2, JWT
+
+PROFESSIONAL EXPERIENCE
+
+Senior Software Engineer
+TechSolutions Inc. | Makati City, Philippines | Jan 2023 - Present
+- Lead development of customer-facing web applications using React and Node.js, serving over 50,000 monthly active users.
+- Designed and implemented RESTful APIs with Express and PostgreSQL, reducing API response time by 40%.
+- Mentored 3 junior developers and conducted code reviews to maintain code quality standards.
+- Migrated legacy monolithic application to microservices architecture on AWS using Docker and CI/CD pipelines.
+- Collaborated with product managers and designers to translate requirements into technical specifications.
+
+Software Developer
+DevWorks Ph | Quezon City, Philippines | Jun 2020 - Dec 2022
+- Developed and maintained internal HR and payroll management systems using Python, Django, and PostgreSQL.
+- Built responsive frontend interfaces with React and Tailwind CSS, improving user satisfaction by 25%.
+- Integrated third-party payment gateways and biometric attendance devices via REST APIs.
+- Wrote unit and integration tests using PyTest and Selenium, achieving 85% test coverage.
+- Participated in daily standups, sprint planning, and retrospectives in an Agile Scrum team.
+
+Junior Web Developer
+StartUp Labs | Taguig City, Philippines | Mar 2019 - May 2020
+- Assisted senior developers in building client websites using HTML, CSS, JavaScript, and WordPress.
+- Fixed bugs and implemented new features based on client feedback and QA reports.
+- Optimized website performance, reducing page load time by 30% through image compression and caching.
+- Created and maintained technical documentation for internal tools and client projects.
+
+EDUCATION
+
+Bachelor of Science in Computer Science
+University of the Philippines Diliman | Quezon City, Philippines | 2015 - 2019
+- Graduated Cum Laude
+- Relevant Coursework: Data Structures & Algorithms, Object-Oriented Programming, Database Systems, Software Engineering, Web Development, Operating Systems, Computer Networks
+- Dean's List (2017-2019)
+- President, UP Web Developers Guild (2018-2019)
+
+CERTIFICATIONS
+- AWS Certified Cloud Practitioner (2023)
+- Meta Front-End Developer Professional Certificate (2022)
+- Oracle Certified Associate, Java SE 8 Programmer (2021)
+
+PROJECTS
+
+HR Payroll Management System (Capstone Project)
+- Full-stack payroll system with employee masterlist, time attendance, leave management, and payslip generation.
+- Tech stack: Django, PostgreSQL, React, Tailwind CSS.
+- Features: statutory deductions (SSS, PhilHealth, Pag-IBIG, BIR tax), 13th month computation, remittance reports.
+
+TaskFlow - Collaborative Task Management App
+- Real-time task management application with drag-and-drop Kanban boards and team collaboration.
+- Tech stack: Node.js, Express, MongoDB, React, Socket.io.
+- Deployed on AWS with Docker and GitHub Actions CI/CD pipeline.
+
+REFERENCES
+Available upon request.

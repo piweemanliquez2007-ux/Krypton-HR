@@ -9,7 +9,7 @@ const Auth = (() => {
   const SESSION_KEY = "hr_session";            // sessionStorage: cleared when the tab closes
   const STAFF_ROLES = ["Admin", "HR"];
   // Pages an Employee can open. Everything else is hidden. (The API enforces the real rules.)
-  const EMPLOYEE_PAGES = ["attendance", "qr-attendance", "mysalary"];
+  const EMPLOYEE_PAGES = ["attendance", "mysalary"];
 
   let session = null;
 

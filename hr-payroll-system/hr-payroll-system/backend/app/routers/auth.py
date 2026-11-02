@@ -7,30 +7,14 @@ from app.database import get_db
 from app.errors import BusinessRuleError
 from app.schemas.auth import ChangePasswordRequest, LoginRequest, TokenResponse
 from app.security import get_current_user
-from app.services import auth_service, qr_service
+from app.services import auth_service
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
-
-
-class QrLoginRequest(BaseModel):
-    qr_payload: str = Field(..., min_length=10)
 
 
 @router.post("/login", response_model=TokenResponse)
 def login(body: LoginRequest, db: Session = Depends(get_db)):
     return auth_service.login(db, body.username, body.password)
-
-
-@router.post("/qr-login", response_model=TokenResponse)
-def qr_login(body: QrLoginRequest, db: Session = Depends(get_db)):
-    """
-    Login to the web app by scanning a QR code. If the employee has no
-    punch for today, a time-in is recorded automatically.
-    """
-    result = qr_service.web_qr_login(db, body.qr_payload)
-    if not result.get("access_token"):
-        raise BusinessRuleError("QR login failed")
-    return result
 
 
 @router.post("/change-password")

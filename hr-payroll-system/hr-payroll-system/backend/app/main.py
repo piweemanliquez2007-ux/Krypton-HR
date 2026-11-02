@@ -9,7 +9,7 @@ from app.database import get_db
 from app.errors import register_error_handlers
 from app.middleware import rate_limit_middleware, security_headers_middleware
 from app.routers import (attendance, auth, chatbot, employees, leaves, lookups,
-                        payroll, qr_attendance, recruitment)
+                         payroll, recruitment)
 
 app = FastAPI(title="HR & Payroll API", version="1.2.0")
 
@@ -33,7 +33,6 @@ app.include_router(auth.router)
 app.include_router(employees.router)
 app.include_router(lookups.router)
 app.include_router(attendance.router)
-app.include_router(qr_attendance.router)
 app.include_router(leaves.router)
 app.include_router(payroll.router)
 app.include_router(chatbot.router)

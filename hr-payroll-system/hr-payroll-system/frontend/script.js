@@ -81,6 +81,174 @@ function calculateEmployeePayroll(salary) {
   };
 }
 
+// ==========================================
+// AI CHATBOT WIDGET INTEGRATION
+// ==========================================
+let chatbotConversationHistory = [];
+let chatbotIsOpen = false;
+
+function setupChatbot() {
+  const toggle = document.getElementById("chatbotToggle");
+  const modal = document.getElementById("chatbotModal");
+  const closeBtn = document.getElementById("chatbotClose");
+  const clearBtn = document.getElementById("chatbotClear");
+  const sendBtn = document.getElementById("chatbotSend");
+  const input = document.getElementById("chatbotInput");
+  const messages = document.getElementById("chatbotMessages");
+
+  if (!toggle || !modal) return;
+
+  function openChatbot() {
+    chatbotIsOpen = true;
+    modal.classList.add("active");
+    setTimeout(() => input && input.focus(), 200);
+    if (messages) messages.scrollTop = messages.scrollHeight;
+  }
+
+  function closeChatbot() {
+    chatbotIsOpen = false;
+    modal.classList.remove("active");
+  }
+
+  toggle.addEventListener("click", () => {
+    if (chatbotIsOpen) closeChatbot();
+    else openChatbot();
+  });
+
+  if (closeBtn) closeBtn.addEventListener("click", closeChatbot);
+
+  if (clearBtn) {
+    clearBtn.addEventListener("click", () => {
+      chatbotConversationHistory = [];
+      messages.innerHTML = `
+        <div class="chatbot-message bot">
+          <div class="message-bubble">
+            Conversation cleared. How may I assist you today?
+          </div>
+        </div>
+      `;
+    });
+  }
+
+  function appendMessage(role, text) {
+    const wrapper = document.createElement("div");
+    wrapper.className = `chatbot-message ${role}`;
+    const bubble = document.createElement("div");
+    bubble.className = "message-bubble";
+    bubble.innerHTML = formatChatbotMarkdown(text);
+    wrapper.appendChild(bubble);
+    messages.appendChild(wrapper);
+    messages.scrollTop = messages.scrollHeight;
+  }
+
+  function showTyping() {
+    const wrapper = document.createElement("div");
+    wrapper.className = "chatbot-message bot";
+    wrapper.id = "chatbotTypingIndicator";
+    const bubble = document.createElement("div");
+    bubble.className = "message-bubble chatbot-typing";
+    bubble.innerHTML = "<span></span><span></span><span></span>";
+    wrapper.appendChild(bubble);
+    messages.appendChild(wrapper);
+    messages.scrollTop = messages.scrollHeight;
+  }
+
+  function removeTyping() {
+    const indicator = document.getElementById("chatbotTypingIndicator");
+    if (indicator) indicator.remove();
+  }
+
+  function formatChatbotMarkdown(text) {
+    if (!text) return "";
+    return String(text)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+      .replace(/\*(.+?)\*/g, "<em>$1</em>")
+      .replace(/`(.+?)`/g, "<code>$1</code>")
+      .replace(/\n/g, "<br>");
+  }
+
+  async function sendMessage() {
+    const message = (input.value || "").trim();
+    if (!message) return;
+
+    appendMessage("user", message);
+    input.value = "";
+    showTyping();
+    sendBtn.disabled = true;
+
+    try {
+      const token = await getChatbotToken();
+      const headers = {
+        "Content-Type": "application/json",
+        ...(token ? { "Authorization": `Bearer ${token}` } : {})
+      };
+
+      const payload = {
+        message: message,
+        history: chatbotConversationHistory
+      };
+
+      const res = await fetch(`${activeApiBase}/chatbot/chat`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.detail || `Request failed with status ${res.status}`);
+      }
+
+      const responseText = data.response || "I am unable to provide an answer at this time.";
+      removeTyping();
+      appendMessage("bot", responseText);
+
+      // Update conversation history for multi-turn context
+      chatbotConversationHistory.push({ user: message, assistant: responseText });
+      if (chatbotConversationHistory.length > 12) {
+        chatbotConversationHistory = chatbotConversationHistory.slice(-12);
+      }
+    } catch (err) {
+      console.error("Chatbot error:", err);
+      removeTyping();
+      appendMessage("bot", `I apologize, but I am currently unable to reach the AI service. ${err.message || "Please try again shortly or contact your system administrator."}`);
+    } finally {
+      sendBtn.disabled = false;
+      input.focus();
+    }
+  }
+
+  sendBtn.addEventListener("click", sendMessage);
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+}
+
+async function getChatbotToken() {
+  if (cachedAuthToken) return cachedAuthToken;
+  try {
+    const res = await fetch(`${activeApiBase}/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username: "admin", password: "Admin@123" })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      cachedAuthToken = data.access_token;
+      return cachedAuthToken;
+    }
+  } catch (err) {
+    // Fall through to anonymous usage
+  }
+  return null;
+}
+
 // DOM INITIALIZATION
 const navBtns = document.querySelectorAll(".nav");
 const pages = document.querySelectorAll(".page");
@@ -91,6 +259,7 @@ document.addEventListener("DOMContentLoaded", () => {
   setupNavigation();
   setupEventListeners();
   setupRecruitmentAI();
+  setupChatbot();
   renderAll();
 });
 
@@ -148,7 +317,7 @@ function setupEventListeners() {
 
   document.getElementById("refreshBtn").addEventListener("click", () => renderAll());
   document.getElementById("calcPayrollBtn").addEventListener("click", () => {
-    alert("Philippine payroll recalculated with updated SSS, PhilHealth, Pag-IBIG, and TRAIN Law Tax tables.");
+    showToast("Philippine payroll recalculated with updated SSS, PhilHealth, Pag-IBIG, and TRAIN Law Tax tables.", "success");
     renderPayroll();
   });
   document.getElementById("generateSlipBtn").addEventListener("click", generatePayslip);
@@ -163,7 +332,33 @@ function getInitials(name) {
 }
 
 function formatMoney(amount) {
-  return "?" + Number(amount).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return "₱" + Number(amount).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function showToast(message, type = "success", duration = 4000) {
+  const container = document.getElementById("toastContainer");
+  if (!container) return;
+
+  const toast = document.createElement("div");
+  toast.className = `toast ${type}`;
+  toast.innerHTML = `
+    <span>${message}</span>
+    <button type="button" class="toast-close" aria-label="Close">×</button>
+  `;
+
+  container.appendChild(toast);
+
+  toast.querySelector(".toast-close").addEventListener("click", () => {
+    toast.style.opacity = "0";
+    toast.style.transform = "translateX(120px)";
+    setTimeout(() => toast.remove(), 300);
+  });
+
+  setTimeout(() => {
+    toast.style.opacity = "0";
+    toast.style.transform = "translateX(120px)";
+    setTimeout(() => toast.remove(), 300);
+  }, duration);
 }
 
 function saveData() {
@@ -205,6 +400,10 @@ function renderStats() {
 }
 
 function renderCharts() {
+  const ctx1El = document.getElementById("payrollChart");
+  const ctx2El = document.getElementById("deptChartCanvas");
+  if (!ctx1El || !ctx2El) return;
+
   let totalNet = 0;
   let totalDeductions = 0;
 
@@ -214,7 +413,7 @@ function renderCharts() {
     totalDeductions += p.totalDeductions;
   });
 
-  const ctx1 = document.getElementById("payrollChart").getContext("2d");
+  const ctx1 = ctx1El.getContext("2d");
   if (payrollChartInstance) payrollChartInstance.destroy();
 
   payrollChartInstance = new Chart(ctx1, {
@@ -223,20 +422,31 @@ function renderCharts() {
       labels: ["Net Payout to Employees", "Statutory Deductions & Tax"],
       datasets: [{
         data: [totalNet, totalDeductions],
-        backgroundColor: ["#0284c7", "#03203c"]
+        backgroundColor: ["#3b82f6", "#475569"],
+        borderColor: ["#60a5fa", "#64748b"],
+        borderWidth: 1
       }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { position: "bottom" } }
+      plugins: {
+        legend: {
+          position: "bottom",
+          labels: {
+            color: "#e2e8f0",
+            font: { size: 12, weight: "600" },
+            padding: 16
+          }
+        }
+      }
     }
   });
 
   const deptCounts = {};
   employees.forEach(e => deptCounts[e.dept] = (deptCounts[e.dept] || 0) + 1);
 
-  const ctx2 = document.getElementById("deptChartCanvas").getContext("2d");
+  const ctx2 = ctx2El.getContext("2d");
   if (deptChartInstance) deptChartInstance.destroy();
 
   deptChartInstance = new Chart(ctx2, {
@@ -246,13 +456,27 @@ function renderCharts() {
       datasets: [{
         label: "Headcount",
         data: Object.values(deptCounts),
-        backgroundColor: "#0284c7"
+        backgroundColor: "#3b82f6",
+        borderColor: "#60a5fa",
+        borderWidth: 1,
+        borderRadius: 6
       }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+      plugins: {
+        legend: {
+          labels: {
+            color: "#e2e8f0",
+            font: { size: 12, weight: "600" }
+          }
+        }
+      },
+      scales: {
+        y: { beginAtZero: true, ticks: { stepSize: 1, color: "#cbd5e1" }, grid: { color: "rgba(71, 85, 105, 0.4)" } },
+        x: { ticks: { color: "#cbd5e1" }, grid: { display: false } }
+      }
     }
   });
 }
@@ -323,7 +547,7 @@ function renderDepartments() {
     <div class="info-card clickable" onclick="openPersonnelModal('Department', '${d}')">
       <span>DEPARTMENT</span>
       <strong>${d}</strong>
-      <small>${depts[d]} Member(s) � View Personnel ?</small>
+      <small>${depts[d]} Member(s) • View Personnel →</small>
     </div>
   `).join("");
 }
@@ -341,7 +565,7 @@ function renderPositions() {
       <td><strong>${p}</strong></td>
       <td>${posMap[p].dept}</td>
       <td>${posMap[p].count} Member(s)</td>
-      <td><button class="link" onclick="openPersonnelModal('Position', '${p}')">View Employees ?</button></td>
+      <td><button class="link" onclick="openPersonnelModal('Position', '${p}')">View Employees →</button></td>
     </tr>
   `).join("");
 }
@@ -401,13 +625,16 @@ function renderAttendance() {
 }
 
 function renderPayroll() {
-  const isSemi = document.getElementById("payrollCycle").value === "semi";
+  const payrollCycleEl = document.getElementById("payrollCycle");
+  if (!payrollCycleEl) return;
+  const isSemi = payrollCycleEl.value === "semi";
   const factor = isSemi ? 0.5 : 1.0;
 
   let grossTotal = 0;
   let deductTotal = 0;
 
   const tbody = document.getElementById("payrollTable");
+  if (!tbody) return;
   tbody.innerHTML = employees.map(e => {
     const baseSalary = e.salary * factor;
     const p = calculateEmployeePayroll(baseSalary);
@@ -433,9 +660,12 @@ function renderPayroll() {
     `;
   }).join("");
 
-  document.getElementById("gross").textContent = formatMoney(grossTotal);
-  document.getElementById("deduct").textContent = formatMoney(deductTotal);
-  document.getElementById("net").textContent = formatMoney(grossTotal - deductTotal);
+  const grossEl = document.getElementById("gross");
+  const deductEl = document.getElementById("deduct");
+  const netEl = document.getElementById("net");
+  if (grossEl) grossEl.textContent = formatMoney(grossTotal);
+  if (deductEl) deductEl.textContent = formatMoney(deductTotal);
+  if (netEl) netEl.textContent = formatMoney(grossTotal - deductTotal);
 }
 
 function renderSalary() {
@@ -480,7 +710,7 @@ function renderThirteenthMonth() {
         <td>${monthsWorked} Months</td>
         <td>${formatMoney(annualBasic)}</td>
         <td><strong>${formatMoney(thirteenthPay)}</strong></td>
-        <td><span class="status-badge ${isExempt ? 'active' : 'leave'}">${isExempt ? 'Tax Exempt (= ?90k)' : 'Taxable Excess'}</span></td>
+        <td><span class="status-badge ${isExempt ? 'active' : 'leave'}">${isExempt ? 'Tax Exempt (≤ ₱90k)' : 'Taxable Excess'}</span></td>
       </tr>
     `;
   }).join("");
@@ -593,10 +823,10 @@ function recordAttendance(type) {
   }
 
   renderAll();
-  alert(`Attendance logged for ${emp.name}`);
+  showToast(`Attendance logged for ${emp.name}`, "success");
 }
 
-function generatePayslip() {
+async function generatePayslip() {
   const empId = document.getElementById("slipEmployee").value;
   const month = document.getElementById("slipMonth").value;
   const emp = employees.find(e => e.id === empId);
@@ -606,20 +836,33 @@ function generatePayslip() {
   const p = calculateEmployeePayroll(emp.salary);
 
   const slipContainer = document.getElementById("slip");
+  const slipBtn = document.getElementById("generateSlipBtn");
+
+  // Show a brief "generating" animation on the button
+  if (slipBtn) {
+    slipBtn.classList.add("is-generating");
+    slipBtn.innerHTML = `<span style="opacity:0;">Generating Official Payslip</span>`;
+  }
+
+  // Simulate a short processing delay so the animation is visible
+  await new Promise(r => setTimeout(r, 450));
+
   slipContainer.innerHTML = `
     <div class="payslip-card">
-      <div class="payslip-header">
-        <div>
-          <h2 style="color:var(--sidebar-bg);">ENTERPRISE HR PHILIPPINES INC.</h2>
-          <small>OFFICIAL STATUTORY PAYSLIP � ${month}</small>
-        </div>
-        <div style="text-align:right;">
-          <strong>ID: ${emp.id}</strong>
-          <p style="font-size:12px; color:#64748b;">Status: ${emp.status}</p>
+      <div class="payslip-row">
+        <div class="payslip-header">
+          <div>
+            <h2 style="color:var(--sidebar-bg);">ENTERPRISE HR PHILIPPINES INC.</h2>
+            <small>OFFICIAL STATUTORY PAYSLIP � ${month}</small>
+          </div>
+          <div style="text-align:right;">
+            <strong>ID: ${emp.id}</strong>
+            <p style="font-size:12px; color:#64748b;">Status: ${emp.status}</p>
+          </div>
         </div>
       </div>
       <div class="payslip-grid">
-        <div>
+        <div class="payslip-row">
           <p style="margin-bottom:4px;"><strong>Employee Name:</strong> ${emp.name}</p>
           <p style="margin-bottom:4px;"><strong>Department:</strong> ${emp.dept}</p>
           <p style="margin-bottom:4px;"><strong>Position Title:</strong> ${emp.pos}</p>
@@ -630,37 +873,43 @@ function generatePayslip() {
           <p style="font-size:11px; color:#64748b;">Pag-IBIG No: ${emp.hdmf || 'N/A'}</p>
         </div>
         <div class="payslip-calc">
-          <div style="display:flex; justify-content:space-between; margin-bottom: 8px;">
+          <div class="payslip-row" style="display:flex; justify-content:space-between; margin-bottom: 8px;">
             <span>Basic Monthly Gross:</span>
             <strong>${formatMoney(p.gross)}</strong>
           </div>
           <div style="font-size:11px; color:#64748b; margin-bottom: 4px;">STATUTORY DEDUCTIONS:</div>
-          <div style="display:flex; justify-content:space-between; margin-bottom: 4px; color:#ef4444; font-size:12px;">
+          <div class="payslip-row" style="display:flex; justify-content:space-between; margin-bottom: 4px; color:#ef4444; font-size:12px;">
             <span>SSS Employee Share:</span>
             <span>-${formatMoney(p.sss)}</span>
           </div>
-          <div style="display:flex; justify-content:space-between; margin-bottom: 4px; color:#ef4444; font-size:12px;">
+          <div class="payslip-row" style="display:flex; justify-content:space-between; margin-bottom: 4px; color:#ef4444; font-size:12px;">
             <span>PhilHealth EE Share:</span>
             <span>-${formatMoney(p.phic)}</span>
           </div>
-          <div style="display:flex; justify-content:space-between; margin-bottom: 4px; color:#ef4444; font-size:12px;">
+          <div class="payslip-row" style="display:flex; justify-content:space-between; margin-bottom: 4px; color:#ef4444; font-size:12px;">
             <span>Pag-IBIG EE Share:</span>
             <span>-${formatMoney(p.hdmf)}</span>
           </div>
-          <div style="display:flex; justify-content:space-between; margin-bottom: 4px; color:#ef4444; font-size:12px;">
+          <div class="payslip-row" style="display:flex; justify-content:space-between; margin-bottom: 4px; color:#ef4444; font-size:12px;">
             <span>BIR TRAIN Tax:</span>
             <span>-${formatMoney(p.tax)}</span>
           </div>
           <hr style="margin: 10px 0; border:0; border-top: 1px solid #cbd5e1;">
-          <div style="display:flex; justify-content:space-between; font-size: 16px;">
+          <div class="payslip-row" style="display:flex; justify-content:space-between; font-size: 16px;">
             <strong>NET TAKE-HOME PAY:</strong>
             <strong style="color:var(--accent-blue);">${formatMoney(p.netPay)}</strong>
           </div>
         </div>
       </div>
-      <button class="primary" onclick="window.print()">Print Official Payslip</button>
+      <button class="primary payslip-print-btn" onclick="window.print()">Print Official Payslip</button>
     </div>
   `;
+
+  // Remove the generating state from the button
+  if (slipBtn) {
+    slipBtn.classList.remove("is-generating");
+    slipBtn.textContent = "Generate Official Payslip";
+  }
 }
 
 // ==========================================
@@ -712,11 +961,12 @@ async function loadApplicantsFromDatabase() {
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const applicants = await res.json();
-    if (!applicants.length) {
+    const activeApplicants = applicants.filter(a => a.application_status !== 'rejected');
+    if (!activeApplicants.length) {
       tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: var(--text-muted);">No applicants yet. Upload a resume above to parse with AI.</td></tr>`;
       return;
     }
-    tbody.innerHTML = applicants.map(a => {
+    tbody.innerHTML = activeApplicants.map(a => {
       const allSkills = a.skills || [];
       const topSkills = allSkills.slice(0, 3);
       const remainingCount = allSkills.length - 3;
@@ -739,9 +989,9 @@ async function loadApplicantsFromDatabase() {
 
       let statusBadge = `<span class="badge" style="background:#e2e8f0; color:#334155;">Applied</span>`;
       if (isHired) {
-        statusBadge = `<span class="badge active" style="background:#dcfce7; color:#166534;">? Hired</span>`;
+        statusBadge = `<span class="badge active" style="background:#dcfce7; color:#166534;">✓ Hired</span>`;
       } else if (isRejected) {
-        statusBadge = `<span class="badge" style="background:#fee2e2; color:#991b1b;">? Rejected</span>`;
+        statusBadge = `<span class="badge" style="background:#fee2e2; color:#991b1b;">✗ Rejected</span>`;
       } else if (a.application_status === 'offer') {
         statusBadge = `<span class="badge" style="background:#fef3c7; color:#92400e;">Offer</span>`;
       }
@@ -749,9 +999,10 @@ async function loadApplicantsFromDatabase() {
       let actionHtml = `<span style="color:var(--text-muted); font-size:12px;">--</span>`;
       if (!isHired && !isRejected) {
         actionHtml = `
-          <div style="display:flex; gap:6px;">
-            <button class="primary" style="padding:4px 10px; font-size:11px; background:#16a34a;" onclick="openHireModal(${a.applicant_id}, '${escapeHtml(a.first_name + ' ' + a.last_name)}', ${a.job_id || 1})">? Hire</button>
-            <button class="secondary" style="padding:4px 10px; font-size:11px; color:#ef4444; border-color:#fca5a5;" onclick="handleRejectCandidate(${a.applicant_id}, ${a.job_id || 1})">? Reject</button>
+          <div style="display:flex; gap:6px; flex-wrap:wrap;">
+            <button class="primary" style="padding:4px 10px; font-size:11px; background:#16a34a;" onclick="openHireModal(${a.applicant_id}, '${escapeHtml(a.first_name + ' ' + a.last_name)}', ${a.job_id || 1})">✓ Hire</button>
+            <button class="secondary" style="padding:4px 10px; font-size:11px; color:#ef4444; border-color:#fca5a5;" onclick="handleRejectCandidate(${a.applicant_id}, ${a.job_id || 1})">✗ Reject</button>
+            <button class="secondary" style="padding:4px 10px; font-size:11px; color:#ef4444; border-color:#fca5a5;" onclick="handleDeleteApplicant(${a.applicant_id}, '${escapeHtml(a.first_name + ' ' + a.last_name)}')">🗑 Delete</button>
           </div>
         `;
       } else if (isHired) {
@@ -786,6 +1037,39 @@ window.openHireModal = function(applicantId, candidateName, jobId) {
   const select = document.getElementById("hireJobSelect");
   if (select) select.value = String(jobId || 1);
   modal.style.display = "flex";
+  // Trigger reflow then animate in
+  requestAnimationFrame(() => {
+    const inner = modal.querySelector("div:first-child");
+    if (inner) {
+      inner.style.transform = "scale(1)";
+      inner.style.opacity = "1";
+    }
+  });
+  // Set salary hint for selected job
+  const salaryInput = document.getElementById("hireSalaryInput");
+  const salaryHintBadge = document.getElementById("salaryHintBadge");
+  const salaryRangeHint = document.getElementById("salaryRangeHint");
+  if (salaryInput && salaryHintBadge && salaryRangeHint) {
+    const opt = document.getElementById("hireJobSelect").selectedOptions[0];
+    const min = Number(opt.getAttribute("data-min") || 30000);
+    const max = Number(opt.getAttribute("data-max") || 80000);
+    salaryInput.value = Math.round((min + max) / 2);
+    salaryHintBadge.textContent = `₱${min.toLocaleString()} – ₱${max.toLocaleString()}`;
+    salaryRangeHint.textContent = `Salary range: ₱${min.toLocaleString()} to ₱${max.toLocaleString()}`;
+  }
+};
+
+function closeHireModalAnimated() {
+  const modal = document.getElementById("hireModal");
+  if (!modal) return;
+  const inner = modal.querySelector("div:first-child");
+  if (inner) {
+    inner.style.transform = "scale(0.95)";
+    inner.style.opacity = "0";
+    setTimeout(() => { modal.style.display = "none"; }, 250);
+  } else {
+    modal.style.display = "none";
+  }
 };
 
 window.handleRejectCandidate = async function(applicantId, jobId) {
@@ -806,10 +1090,31 @@ window.handleRejectCandidate = async function(applicantId, jobId) {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.detail || "Failed to reject candidate");
-    alert("Candidate application marked as Rejected.");
+    showToast("Candidate application marked as Rejected.", "error");
     loadApplicantsFromDatabase();
   } catch (err) {
-    alert(`Error: ${err.message}`);
+    showToast(`Error: ${err.message}`, "error");
+  }
+};
+
+window.handleDeleteApplicant = async function(applicantId, candidateName) {
+  if (!confirm(`Are you sure you want to delete ${candidateName} from the applicant list?`)) return;
+  try {
+    const token = await getAdminToken();
+    const res = await fetch(`${activeApiBase}/recruitment/applicants/${applicantId}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { "Authorization": `Bearer ${token}` } : {})
+      }
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    showToast(`${candidateName} removed from applicant list.`, "success");
+    loadApplicantsFromDatabase();
+  } catch (err) {
+    // Fallback: remove from local list if backend doesn't support delete
+    showToast(`Could not delete from server: ${err.message}`, "error");
+    loadApplicantsFromDatabase();
   }
 };
 
@@ -828,7 +1133,7 @@ function setupRecruitmentAI() {
     parseBtn.addEventListener("click", async () => {
       const file = fileInput.files[0];
       if (!file) {
-        alert("Please select a resume file (.pdf or .txt) first!");
+        showToast("Please select a resume file (.pdf or .txt) first!", "error");
         return;
       }
 
@@ -868,7 +1173,7 @@ function setupRecruitmentAI() {
           </span>
         `).join("") || "<em>None detected</em>";
 
-        statusText.textContent = "? Candidate details and skills successfully saved into PostgreSQL!";
+        statusText.textContent = "✓ Candidate details and skills successfully saved into PostgreSQL!";
         statusText.style.color = "#16a34a";
         fileInput.value = "";
 
@@ -876,7 +1181,7 @@ function setupRecruitmentAI() {
         loadApplicantsFromDatabase();
       } catch (err) {
         console.error(err);
-        statusText.textContent = `? Error: ${err.message}`;
+        statusText.textContent = `✗ Error: ${err.message}`;
         statusText.style.color = "#dc2626";
       } finally {
         parseBtn.disabled = false;
@@ -889,24 +1194,28 @@ function setupRecruitmentAI() {
   const modal = document.getElementById("hireModal");
   const cancelHireBtn = document.getElementById("cancelHireBtn");
   const confirmHireBtn = document.getElementById("confirmHireBtn");
+  const closeHireModal = document.getElementById("closeHireModal");
   const jobSelect = document.getElementById("hireJobSelect");
   const salaryInput = document.getElementById("hireSalaryInput");
   const salaryHint = document.getElementById("salaryRangeHint");
 
   if (jobSelect && salaryInput && salaryHint) {
     jobSelect.addEventListener("change", () => {
-      const opt = jobSelect.selectedOptions[0];
-      const min = Number(opt.getAttribute("data-min") || 30000);
-      const max = Number(opt.getAttribute("data-max") || 80000);
-      salaryInput.value = Math.round((min + max) / 2);
-      salaryHint.textContent = `Salary must be between ?${min.toLocaleString()} and ?${max.toLocaleString()}`;
+    const opt = jobSelect.selectedOptions[0];
+    const min = Number(opt.getAttribute("data-min") || 30000);
+    const max = Number(opt.getAttribute("data-max") || 80000);
+    salaryInput.value = Math.round((min + max) / 2);
+    salaryHint.textContent = `Salary must be between ₱${min.toLocaleString()} and ₱${max.toLocaleString()}`;
+    document.getElementById("salaryHintBadge").textContent = `₱${min.toLocaleString()} – ₱${max.toLocaleString()}`;
     });
   }
 
   if (cancelHireBtn && modal) {
-    cancelHireBtn.addEventListener("click", () => {
-      modal.style.display = "none";
-    });
+    cancelHireBtn.addEventListener("click", closeHireModalAnimated);
+  }
+
+  if (closeHireModal) {
+    closeHireModal.addEventListener("click", closeHireModalAnimated);
   }
 
   if (confirmHireBtn && modal) {
@@ -917,7 +1226,7 @@ function setupRecruitmentAI() {
       const salary = Number(document.getElementById("hireSalaryInput").value);
 
       if (!salary || salary <= 0) {
-        alert("Please enter a valid base salary.");
+        showToast("Please enter a valid base salary.", "error");
         return;
       }
 
@@ -944,7 +1253,7 @@ function setupRecruitmentAI() {
         if (!res.ok) throw new Error(data.detail || "Failed to hire applicant");
 
         modal.style.display = "none";
-        alert(`?? Success! ${candidateName} has been officially hired as Employee #${data.new_employee_id} via PostgreSQL stored procedure sp_hire_applicant()!`);
+        showToast(`✓ Success! ${candidateName} has been officially hired as Employee #${data.new_employee_id} via PostgreSQL stored procedure sp_hire_applicant()!`, "success");
 
         // Add to local employee list so they immediately show on Employees and Dashboard pages!
         const deptName = jobId === 2 ? "Human Resources" : "Engineering";
@@ -968,7 +1277,7 @@ function setupRecruitmentAI() {
         renderAll();
         loadApplicantsFromDatabase();
       } catch (err) {
-        alert(`? Hire Error: ${err.message}`);
+        showToast(`✓ Hire Error: ${err.message}`, "error");
       } finally {
         confirmHireBtn.disabled = false;
         confirmHireBtn.textContent = "Confirm Hire";
