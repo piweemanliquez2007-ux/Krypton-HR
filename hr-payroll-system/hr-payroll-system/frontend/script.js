@@ -1036,7 +1036,6 @@ async function loadApplicantsFromDatabase() {
           <div style="display:flex; gap:6px; flex-wrap:wrap;">
             <button class="primary" style="padding:4px 10px; font-size:11px; background:#16a34a;" onclick="openHireModal(${a.applicant_id}, '${escapeHtml(a.first_name + ' ' + a.last_name)}', ${a.job_id || 1})">✓ Hire</button>
             <button class="secondary" style="padding:4px 10px; font-size:11px; color:#ef4444; border-color:#fca5a5;" onclick="handleRejectCandidate(${a.applicant_id}, ${a.job_id || 1})">✗ Reject</button>
-            <button class="secondary" style="padding:4px 10px; font-size:11px; color:#ef4444; border-color:#fca5a5;" onclick="handleDeleteApplicant(${a.applicant_id}, '${escapeHtml(a.first_name + ' ' + a.last_name)}')">🗑 Delete</button>
           </div>
         `;
       } else if (isHired) {
@@ -1128,27 +1127,6 @@ window.handleRejectCandidate = async function(applicantId, jobId) {
     loadApplicantsFromDatabase();
   } catch (err) {
     showToast(`Error: ${err.message}`, "error");
-  }
-};
-
-window.handleDeleteApplicant = async function(applicantId, candidateName) {
-  if (!confirm(`Are you sure you want to delete ${candidateName} from the applicant list?`)) return;
-  try {
-    const token = await getAdminToken();
-    const res = await fetch(`${activeApiBase}/recruitment/applicants/${applicantId}`, {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        ...(token ? { "Authorization": `Bearer ${token}` } : {})
-      }
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    showToast(`${candidateName} removed from applicant list.`, "success");
-    loadApplicantsFromDatabase();
-  } catch (err) {
-    // Fallback: remove from local list if backend doesn't support delete
-    showToast(`Could not delete from server: ${err.message}`, "error");
-    loadApplicantsFromDatabase();
   }
 };
 
