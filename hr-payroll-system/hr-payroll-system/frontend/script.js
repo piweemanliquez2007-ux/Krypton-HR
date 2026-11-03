@@ -955,6 +955,10 @@ function escapeHtml(str) {
 }
 
 async function getAdminToken() {
+  if (typeof Auth !== "undefined" && Auth.getToken) {
+    const ownToken = Auth.getToken();
+    if (ownToken) return ownToken;
+  }
   if (cachedAuthToken) return cachedAuthToken;
   // SECURITY: Never hardcode admin credentials in production frontend code.
   // Use a dedicated low-privilege service account configured server-side,
