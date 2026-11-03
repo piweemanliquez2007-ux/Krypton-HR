@@ -231,6 +231,12 @@ function setupChatbot() {
 }
 
 async function getChatbotToken() {
+  // Prefer the logged-in user's own JWT so the chatbot runs with their real role/permissions.
+  if (typeof Auth !== "undefined" && Auth.getToken) {
+    const ownToken = Auth.getToken();
+    if (ownToken) return ownToken;
+  }
+  // Fallback for the recruitment AI module (which also calls this function).
   if (cachedAuthToken) return cachedAuthToken;
   try {
     const res = await fetch(`${activeApiBase}/auth/login`, {
@@ -935,7 +941,7 @@ async function generatePayslip() {
 // ==========================================
 // RECRUITMENT & AI RESUME PARSER INTEGRATION
 // ==========================================
-let activeApiBase = window.location.hostname === "localhost" ? "https://krypton-hr.onrender.com" : "https://krypton-hr.onrender.com";
+let activeApiBase = window.location.hostname === "localhost" ? "https://krypton-hr-kx0a.onrender.com" : "https://krypton-hr-kx0a.onrender.com";
 let cachedAuthToken = null;
 
 function escapeHtml(str) {
@@ -950,13 +956,17 @@ function escapeHtml(str) {
 
 async function getAdminToken() {
   if (cachedAuthToken) return cachedAuthToken;
+  // SECURITY: Never hardcode admin credentials in production frontend code.
+  // Use a dedicated low-privilege service account configured server-side,
+  // or require explicit user login. The fallback is intentionally disabled.
+  const FALLBACK_USER = null; // Set only in local dev via secure config, NEVER in production
   const candidateUrls = [activeApiBase];
   for (const baseUrl of Array.from(new Set(candidateUrls))) {
     try {
       const res = await fetch(`${baseUrl}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: "admin", password: "Admin@123" })
+        body: JSON.stringify(FALLBACK_USER || { username: "", password: "" })
       });
       if (res.ok) {
         const data = await res.json();

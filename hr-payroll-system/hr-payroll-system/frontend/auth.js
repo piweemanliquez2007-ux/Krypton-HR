@@ -4,7 +4,10 @@
    ========================================================================== */
 const Auth = (() => {
   // IMPORTANT: change this to your live backend URL when you deploy.
-  const API_BASE = "https://krypton-hr.onrender.com";
+  const API_BASE = "https://krypton-hr-kx0a.onrender.com";
+  // NEVER hardcode credentials. The chatbot/recruitment fallback must use a
+  // dedicated low-privilege service account configured via backend env, not admin creds.
+  const FALLBACK_USER = null; // set to {username, password} ONLY in local dev via a secure channel
 
   const SESSION_KEY = "hr_session";            // sessionStorage: cleared when the tab closes
   const STAFF_ROLES = ["Admin", "HR"];
